@@ -2,7 +2,7 @@
 
 // Adapted from xml.feed with some adjustments
 
-// TODO: Ideally we'd provide UI for category / tag choices
+// TODO: Ideally we'd provide a more interesting UI for category / tag choices
 function buildUrl() {
   return `${site}/${filter}.rss`;
 }
@@ -12,7 +12,6 @@ function verify() {
 
   sendRequest(reqUrl)
     .then((xml) => {
-      console.log("hit response verify?");
       let jsonObject = xmlParse(xml);
 
       if (jsonObject.feed != null) {
