@@ -1,0 +1,11 @@
+{
+	"inputs": [
+		{
+			"name": "filter",
+			"type": "text",
+			"prompt": "Filter",
+			"value": "latest"
+		},
+
+	]
+}

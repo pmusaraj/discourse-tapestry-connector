@@ -1,0 +1,40 @@
+{
+	"html": [
+		{
+			"element": "meta",
+			"check": "property",
+			"match": "generator",
+			"use": "content",
+			"extract": "/.*Discourse.*/"
+		},
+		{
+			"element": "meta",
+			"check": "property",
+			"match": "og:url",
+			"use": "content",
+			"extract": "/(https://[^/]+)/",
+			"variable": "site"
+		},
+		{
+			"element": "link",
+			"check": "type",
+			"match": "/application/rss\\+xml/",
+			"use": "href",
+			"variable": "site"
+		}
+	],
+	"xml": [
+		{
+			"root": "feed",
+			"with": "entry"
+		},
+		{
+			"root": "rss",
+			"with": "item"
+		},
+		{
+			"root": "rdf:RDF",
+			"with": "items"
+		}
+	]
+}

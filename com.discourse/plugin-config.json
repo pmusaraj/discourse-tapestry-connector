@@ -1,0 +1,11 @@
+{
+	"id": "com.discourse",
+	"display_name": "Discourse",
+	"default_color": "blue",
+	"site_prompt": "Community URL",
+	"site_placeholder": "https://meta.discourse.org",
+	"icon": "https://d11a6trkgmumsb.cloudfront.net/original/4X/c/1/1/c11a44f8b25bb161fb73a1aa3341788fd626bdb2.png",
+	"needs_verification": true,
+	"verify_variables": false,
+	"check_interval": 300
+}
