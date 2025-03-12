@@ -7,5 +7,6 @@
 	"icon": "https://discourse.org/a/img/favicon.png",
 	"needs_verification": true,
 	"verify_variables": false,
+	"provides_attachments": true,
 	"check_interval": 300
 }

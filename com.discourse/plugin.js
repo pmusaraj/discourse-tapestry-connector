@@ -14,78 +14,7 @@ function verify() {
     .then((xml) => {
       let jsonObject = xmlParse(xml);
 
-      if (jsonObject.feed != null) {
-        // Atom 1.0
-        const feedAttributes = jsonObject.feed.link$attrs;
-        let baseUrl = null;
-        if (feedAttributes instanceof Array) {
-          for (const feedAttribute of feedAttributes) {
-            if (feedAttribute.rel == "alternate") {
-              baseUrl = feedAttribute.href;
-              break;
-            }
-          }
-        } else {
-          if (feedAttributes.rel == "alternate") {
-            baseUrl = feedAttributes.href;
-          }
-        }
-        const displayName = jsonObject.feed.title;
-        let icon = null;
-        if (jsonObject.feed.icon != null) {
-          icon = jsonObject.feed.icon;
-          const verification = {
-            displayName: displayName,
-            icon: icon,
-            baseUrl: baseUrl,
-          };
-          processVerification(verification);
-        }
-        if (baseUrl != null && icon === null) {
-          let siteUrl = baseUrl.split("/").splice(0, 3).join("/");
-          lookupIcon(siteUrl).then((icon) => {
-            const verification = {
-              displayName: displayName,
-              icon: icon,
-              baseUrl: baseUrl,
-            };
-            processVerification(verification);
-          });
-        } else {
-          // try to get icon from the feed
-          let feedUrl = null;
-          if (feedAttributes instanceof Array) {
-            for (const feedAttribute of feedAttributes) {
-              if (feedAttribute.rel == "self") {
-                feedUrl = feedAttribute.href;
-                break;
-              }
-            }
-          } else {
-            if (feedAttributes.rel == "self") {
-              feedUrl = feedAttributes.href;
-            }
-          }
-          if (feedUrl != null) {
-            let siteUrl = feedUrl.split("/").splice(0, 3).join("/");
-            lookupIcon(siteUrl).then((icon) => {
-              const verification = {
-                displayName: displayName,
-                icon: icon,
-                baseUrl: baseUrl,
-              };
-              processVerification(verification);
-            });
-          } else {
-            const verification = {
-              displayName: displayName,
-              icon: null,
-              baseUrl: baseUrl,
-            };
-            processVerification(verification);
-          }
-        }
-      } else if (jsonObject.rss != null && jsonObject.rss.channel != null) {
+      if (jsonObject.rss != null && jsonObject.rss.channel != null) {
         // RSS 2.0
         // TODO: Check that XML is good:
         // if (jsonObject.rss instanceof Object	&& jsonObject.rss.channel instanceof Object) { ... }
@@ -105,31 +34,7 @@ function verify() {
         //				};
         //				processVerification(verification);
         //			}
-        let feedUrl = baseUrl.split("/").splice(0, 3).join("/");
-        lookupIcon(feedUrl).then((icon) => {
-          const verification = {
-            displayName: displayName,
-            icon: icon,
-            baseUrl: baseUrl,
-          };
-          processVerification(verification);
-        });
-      } else if (jsonObject["rdf:RDF"] != null) {
-        // RSS 1.0
-        const baseUrl = jsonObject["rdf:RDF"].channel.link;
-        const displayName = jsonObject["rdf:RDF"].channel.title;
 
-        // NOTE: In theory, you can get the icon from the RDF channel. In practice, places like
-        // Slashdot haven't updated this image since the beginning of this century.
-        // 			if (jsonObject["rdf:RDF"].channel.image$attrs != null) {
-        // 				icon = jsonObject["rdf:RDF"].channel.image$attrs["rdf:resource"];
-        // 				const verification = {
-        // 					displayName: displayName,
-        // 					icon: icon,
-        // 					baseUrl: baseUrl
-        // 				};
-        // 				processVerification(verification);
-        // 			}
         let feedUrl = baseUrl.split("/").splice(0, 3).join("/");
         lookupIcon(feedUrl).then((icon) => {
           const verification = {
@@ -167,7 +72,16 @@ function load() {
 
   sendRequest(reqUrl, "GET", null, extraHeaders, true)
     .then((text) => {
-      let jsonObject = xmlParse(text);
+      const response = JSON.parse(text);
+      console.log(`response.status = ${response.status}`);
+
+      if (response.status != 200) {
+        // 304, 500 and other non-200 responses return no results
+        processResults([]);
+        return;
+      }
+
+      let jsonObject = xmlParse(response.body);
 
       if (jsonObject.feed != null) {
         // Atom 1.0
@@ -410,55 +324,6 @@ function load() {
 
           if (attachments.length > 0) {
             resultItem.attachments = attachments;
-          }
-
-          results.push(resultItem);
-        }
-
-        processResults(results);
-      } else if (jsonObject["rdf:RDF"] != null) {
-        // RSS 1.0
-        const feedUrl = jsonObject["rdf:RDF"].channel.link;
-        const feedName = jsonObject["rdf:RDF"].channel.title;
-
-        const item = jsonObject["rdf:RDF"].item;
-        let items = null;
-        if (item instanceof Array) {
-          items = item;
-        } else {
-          items = [item];
-        }
-        var results = [];
-        for (const item of items) {
-          if (item["dc:date"] == null) {
-            continue;
-          }
-          const url = item.link;
-          const date = new Date(item["dc:date"]);
-          let title = item.title?.trim();
-          let content = item.description;
-
-          let identity = null;
-          let authorName = item["dc:creator"];
-          if (authorName != null) {
-            if (authorName instanceof Array) {
-              authorName = authorName.join(", ");
-            } else {
-              authorName = authorName.trim();
-            }
-            identity = Identity.createWithName(authorName);
-            identity.uri = feedUrl;
-          }
-
-          const resultItem = Item.createWithUriDate(url, date);
-          if (title != null) {
-            resultItem.title = title;
-          }
-          if (content != null) {
-            resultItem.body = content;
-          }
-          if (identity != null) {
-            resultItem.author = identity;
           }
 
           results.push(resultItem);
